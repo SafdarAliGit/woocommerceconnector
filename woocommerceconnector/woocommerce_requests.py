@@ -176,9 +176,9 @@ def get_woocommerce_items(ignore_filter_conditions=False):
     response = get_request_request('products?per_page={0}&{1}'.format(_per_page,filter_condition) )
     woocommerce_products.extend(response.json())
 
-    for page_idx in range(1, int( response.headers.get('X-WP-TotalPages')) or 1):
-        response = get_request_request('products?per_page={0}&page={1}&{2}'.format(_per_page,page_idx+1,filter_condition) )
-        woocommerce_products.extend(response.json())
+    # for page_idx in range(1, int( response.headers.get('X-WP-TotalPages')) or 1):
+    #     response = get_request_request('products?per_page={0}&page={1}&{2}'.format(_per_page,page_idx+1,filter_condition) )
+    #     woocommerce_products.extend(response.json())
 
     return woocommerce_products
 
