@@ -547,7 +547,7 @@ def create_new_item_to_woocommerce(item, item_data, erp_item, variant_item_name_
         #erp_item.woocommerce_variant_id = new_item['product']["variants"][0].get("id")
 
     erp_item.save()
-    #update_variant_item(new_item, variant_item_name_list)
+    update_variant_item(new_item, variant_item_name_list)
 
 def sync_item_image(item):
     image_info = {
