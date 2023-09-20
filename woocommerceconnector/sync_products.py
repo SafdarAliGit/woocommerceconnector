@@ -396,8 +396,9 @@ def sync_erpnext_items(price_list, warehouse, woocommerce_item_list):
     woocommerce_item_list = {}
     for item in get_woocommerce_items():
         woocommerce_item_list[int(item['id'])] = item
-
-    for item in get_erpnext_items(price_list):
+    erpnext_items = get_erpnext_items(price_list)
+    make_woocommerce_log(title="Simple Item Sync pre", status="Started", method='sync_erpnext_items', message=cstr(erpnext_items))
+    for item in erpnext_items:
         try:
             sync_item_with_woocommerce(item, price_list, warehouse, woocommerce_item_list.get(item.get('woocommerce_product_id')))
             frappe.local.form_dict.count_dict["products"] += 1
@@ -502,6 +503,7 @@ def sync_item_with_woocommerce(item, price_list, warehouse, woocommerce_item=Non
         item_data["id"] = item.get("woocommerce_product_id")
         try:
             put_request("products/{0}".format(item.get("woocommerce_product_id")), item_data)
+            make_woocommerce_log(title="Simple Item Sync", status="Success", method='sync_item_with_woocommerce', message=cstr(item_data))
 
         except requests.exceptions.HTTPError as e:
             if e.args[0] and (e.args[0].startswith("404") or e.args[0].startswith("400")):
@@ -518,6 +520,7 @@ def sync_item_with_woocommerce(item, price_list, warehouse, woocommerce_item=Non
             erp_varient_item = frappe.get_doc("Item", variant["item_name"])
             if erp_varient_item.woocommerce_product_id: #varient exist in woocommerce let's update only
                 r = put_request("products/{0}/variations/{1}".format(erp_item.woocommerce_product_id, erp_varient_item.woocommerce_product_id),variant)
+                make_woocommerce_log(title="varient Item Sync", status="Success", method='sync_item_with_woocommerce', message=cstr(item_data))
             else:
                 woocommerce_variant = post_request("products/{0}/variations".format(erp_item.woocommerce_product_id), variant)
 
@@ -542,6 +545,7 @@ def create_new_item_to_woocommerce(item, item_data, erp_item, variant_item_name_
     new_item = post_request("products", item_data)
 
     erp_item.woocommerce_product_id = new_item.get("id")
+    make_woocommerce_log(title="Item Created", status="Success", method='create_new_item_to_woocommerce', message=cstr(item_data))
 
     #if not item.get("has_variants"):
         #erp_item.woocommerce_variant_id = new_item['product']["variants"][0].get("id")
@@ -775,8 +779,8 @@ def update_item_stock(item_code, woocommerce_settings, bin=None, force=False):
 					# item = single
                     item_data, resource = get_product_update_dict_and_resource(item.woocommerce_product_id, actual_qty=qty)
                 try:
-					#make_woocommerce_log(title="Update stock of {0}".format(item.barcode), status="Started", method="update_item_stock", message="Resource: {0}, data: {1}".format(resource, item_data))
                     put_request(resource, item_data)
+                    make_woocommerce_log(title="Updated stock of {0}".format(item.barcode), status="Started", method="update_item_stock", message="Resource: {0}, data: {1}".format(resource, item_data))
                 except requests.exceptions.HTTPError as e:
                     if e.args[0] and e.args[0].startswith("404"):
                         make_woocommerce_log(title=e.message, status="Error", method="update_item_stock", message=frappe.get_traceback(),
